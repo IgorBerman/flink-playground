@@ -1,0 +1,90 @@
+---
+- hosts: all
+  remote_user: vagrant
+  sudo: yes
+  vars:
+    flink_url: "http://www.eu.apache.org/dist/flink/flink-0.10.2/flink-0.10.2-bin-hadoop27.tgz"
+    flink_archive: "/usr/local/flink-0.10.2-bin-hadoop27.tgz"
+    flink_path: /usr/local/flink-0.10.2
+    flink_link: /usr/local/flink
+    master_ip: 172.17.177.11
+    slave_ips:
+      - 172.17.177.21
+      - 172.17.177.22
+  tasks:
+  - name: Install add-apt-repostory
+    apt: name=software-properties-common state=latest
+
+  - name: Add Oracle Java Repository
+    apt_repository: repo='ppa:webupd8team/java'
+
+  - name: Accept Java 8 License
+    debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+
+  - name: Install Oracle Java 8
+    apt: name={{item}} state=latest
+    with_items:
+      - oracle-java8-installer
+      - ca-certificates
+      - oracle-java8-set-default
+
+  - name: Download flink
+    sudo: true
+    get_url: url={{flink_url}} dest={{flink_archive}}
+
+  - name: Extr flink
+    sudo: true
+    unarchive: src={{flink_archive}} dest=/usr/local copy=no
+
+  - name: Link flink
+    sudo: true
+    file: src={{flink_path}} dest={{flink_link}} state=link
+
+  - name: Download right version of http client
+    sudo: true
+    get_url: url=http://central.maven.org/maven2/org/apache/httpcomponents/httpclient/4.2.6/httpclient-4.2.6.jar dest="{{flink_link}}/lib/ahttpclient-4.2.6.jar"
+
+  - name: Chown flink
+    sudo: true
+    file: path={{flink_path}} owner=vagrant recurse=yes
+
+  - name: Auth keys
+    authorized_key: user=vagrant key="{{ lookup('file', '/vagrant/id_rsa.pub') }}"
+
+  - name: Auth private
+    copy: content={{lookup('file', '/vagrant/id_rsa')}} dest="/home/vagrant/.ssh/id_rsa"
+
+  - name: Setup flink master rpc
+    lineinfile: "dest={{flink_link}}/conf/flink-conf.yaml regexp='^jobmanager.rpc.address.*' line='jobmanager.rpc.address: {{master_ip}}'"
+
+  - name: Setup flink slaves
+    lineinfile: dest="{{flink_link}}/conf/slaves" line={{item}}
+    with_items: "{{slave_ips}}"
+
+  - name: Remove localhost from slaves
+    lineinfile: dest="{{flink_link}}/conf/slaves" line=localhost state=absent
+
+
+
+- hosts: master
+  vars:
+    flink_link: /usr/local/flink
+
+  tasks:
+  - name: Add Redis Repository
+    sudo: yes
+    apt_repository: repo='ppa:rwky/redis'
+
+  - name: Install redis-server
+    sudo: yes
+    apt: name=redis-server
+
+  - name: Redis binding
+    sudo: yes
+    lineinfile: "dest=/etc/redis/redis.conf regexp='^bind.*' line='bind 0.0.0.0'"
+    notify:
+      - restart redis-server
+
+  - name: Start all
+    command: "{{flink_link}}/bin/start-cluster.sh"
+

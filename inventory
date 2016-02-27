@@ -1,0 +1,6 @@
+master ansible_connection=local
+slave1      ansible_ssh_host=172.17.177.21 ansible_ssh_private_key_file=/vagrant/.vagrant/machines/slave1/virtualbox/private_key
+slave2      ansible_ssh_host=172.17.177.22 ansible_ssh_private_key_file=/vagrant/.vagrant/machines/slave2/virtualbox/private_key
+
+[nodes]
+slave[1:2]
