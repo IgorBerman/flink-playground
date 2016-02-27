@@ -8,4 +8,4 @@
 * build artifact from host machine(your desktop): cd flink-tweets && mvn clean package
 * start & provision cluster with : cd .. ; vagrant up
 * Check that everything is ok with http://172.17.177.11:8081 (you should be able to see 2 task managers connected)
-* You can submit job on master machine than: /usr/local/flink/bin/flink run -c example.TwitterJob /vagrant/flink-tweets/target/flink-tweets-1.0-SNAPSHOT.jar /vagrant/twitter.properties trump,clinton,sanders localhost
+* You can submit job on master machine than: /usr/local/flink/bin/flink run -c example.TwitterJob /vagrant/flink-tweets/target/flink-tweets-1.0-SNAPSHOT.jar /vagrant/twitter.properties trump,clinton,sanders 172.17.177.11

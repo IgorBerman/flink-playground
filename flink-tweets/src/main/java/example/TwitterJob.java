@@ -18,6 +18,7 @@ package example;
  * limitations under the License.
  */
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
@@ -139,7 +140,11 @@ public class TwitterJob {
 		@Override
 		public void invoke(Tuple2<String, Integer> t) throws Exception {
 			System.out.println("Flushing " + t);
-			jedisConn.hset("stats", String.valueOf(t.getField(0)), String.valueOf(t.getField(1)));
+			String key = String.valueOf(t.getField(0));
+			String val = String.valueOf(t.getField(1));
+			jedisConn.hset("stats", key, val);
+			jedisConn.lpush(key, new String[]{val});
+			jedisConn.ltrim(key, 0, 99);
 		}
 
 		@Override
