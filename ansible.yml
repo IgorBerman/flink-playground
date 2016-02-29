@@ -48,11 +48,12 @@
     sudo: true
     file: path={{flink_path}} owner=vagrant recurse=yes
 
-  - name: Auth keys
-    authorized_key: user=vagrant key="{{ lookup('file', '/vagrant/id_rsa.pub') }}"
+  - name: Public key of master
+    lineinfile: line="{{lookup('file', '/vagrant/id_rsa.pub')}}" dest="/home/vagrant/.ssh/authorized_keys"
 
-  - name: Auth private
-    copy: content={{lookup('file', '/vagrant/id_rsa')}} dest="/home/vagrant/.ssh/id_rsa"
+  - name: StrictHostKeyChecking=no
+    sudo: yes
+    lineinfile: dest=/etc/ssh/ssh_config line=StrictHostKeyChecking=no
 
   - name: Setup flink master rpc
     lineinfile: "dest={{flink_link}}/conf/flink-conf.yaml regexp='^jobmanager.rpc.address.*' line='jobmanager.rpc.address: {{master_ip}}'"
@@ -71,6 +72,9 @@
     flink_link: /usr/local/flink
 
   tasks:
+  - name: Private key
+    copy: src=/vagrant/id_rsa dest=/home/vagrant/.ssh/id_rsa mode=0600
+
   - name: Add Redis Repository
     sudo: yes
     apt_repository: repo='ppa:rwky/redis'
@@ -79,12 +83,33 @@
     sudo: yes
     apt: name=redis-server
 
+  - name: Install node
+    sudo: yes
+    apt: name=node
+
+  - name: Install npm
+    sudo: yes
+    apt: name=npm
+
+  - name: install global node packages
+    npm: name={{item}} path=/home/vagrant
+    with_items:
+      - redis
+
   - name: Redis binding
     sudo: yes
     lineinfile: "dest=/etc/redis/redis.conf regexp='^bind.*' line='bind 0.0.0.0'"
-    notify:
-      - restart redis-server
+    #notify:
+    #  - restart redis-server
+
+  - name: StrictHostKeyChecking=no
+    sudo: yes
+    lineinfile: dest=/etc/ssh/ssh_config line=StrictHostKeyChecking=no
+
 
   - name: Start all
     command: "{{flink_link}}/bin/start-cluster.sh"
+
+  - service: name=redis-server state=started
+
 

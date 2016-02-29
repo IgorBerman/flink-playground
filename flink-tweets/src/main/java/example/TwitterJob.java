@@ -30,7 +30,9 @@ import org.apache.flink.shaded.com.google.common.base.Splitter;
 import org.apache.flink.shaded.com.google.common.collect.Sets;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.PrintSinkFunction;
@@ -65,12 +67,12 @@ public class TwitterJob {
 				.flatMap(new SelectEnglishAndTokenizeFlatMap()).filter(new WordsFilter(filters))
 				.keyBy(new WordKeySelector());
 
-		WindowedStream<Tuple2<String, Integer>, String, TimeWindow> windowed = keyed.timeWindow(Time.seconds(5));
+		WindowedStream<Tuple2<String, Integer>, String, TimeWindow> windowed = keyed.timeWindow(Time.seconds(10));
 
-		windowed.sum(1)
-		.addSink(new RedisSink(redisHost))
-		//.addSink(new PrintSinkFunction<Tuple2<String, Integer>>())
-		;
+		SingleOutputStreamOperator<Tuple2<String, Integer>, ?> summed = windowed.sum(1);
+		
+		summed.addSink(new RedisSink(redisHost));
+		summed.addSink(new PrintSinkFunction<Tuple2<String, Integer>>());
 		// execute program
 		env.execute("Twitter Streaming Example");
 	}
@@ -139,7 +141,6 @@ public class TwitterJob {
 
 		@Override
 		public void invoke(Tuple2<String, Integer> t) throws Exception {
-			System.out.println("Flushing " + t);
 			String key = String.valueOf(t.getField(0));
 			String val = String.valueOf(t.getField(1));
 			jedisConn.hset("stats", key, val);
