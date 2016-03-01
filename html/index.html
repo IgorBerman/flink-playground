@@ -4,18 +4,18 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 </head>
 <body>
-<div style="background-color: black;max-width: 1200">
+<div style="background-color: black;max-width: 1400">
 	<ol>
 	<li style="font-family:Courier; color:rgb(0, 255, 0); font-size: 20px;">Sanders</li>
 	<li style="font-family:Courier; color:rgb(255, 0, 255); font-size: 20px;">Clinton</li>
 	<li style="font-family:Courier; color:rgb(0, 255, 255); font-size: 20px;">Trump</li>
 	</ol>
 </div>
-<canvas id="mycanvas" width="1200" height="600"></canvas>
+<canvas id="mycanvas" width="1400" height="800"></canvas>
 <div id="content"/>
 <script  type="text/javascript">
-var smoothie = new SmoothieChart({millisPerPixel:100});
-smoothie.streamTo(document.getElementById("mycanvas"), 1000);
+var smoothie = new SmoothieChart({millisPerPixel:100, maxValue:30, minValue:0});
+smoothie.streamTo(document.getElementById("mycanvas"), 2000);
 var line1 = new TimeSeries();
 var line2 = new TimeSeries();
 var line3 = new TimeSeries();
