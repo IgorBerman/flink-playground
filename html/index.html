@@ -1,0 +1,60 @@
+<html>
+<head>
+<script type="text/javascript" src="smoothie.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+</head>
+<body>
+<canvas id="mycanvas" width="800" height="600"></canvas>
+<div id="content"/>
+<script  type="text/javascript">
+var smoothie = new SmoothieChart();
+smoothie.streamTo(document.getElementById("mycanvas"), 1000);
+var line1 = new TimeSeries();
+var line2 = new TimeSeries();
+
+// Add a random value to each line every second
+// setInterval(function() {
+//   line1.append(new Date().getTime(), Math.random());
+//   line2.append(new Date().getTime(), Math.random());
+// }, 1000);
+
+// Add to SmoothieChart
+smoothie.addTimeSeries(line1,
+	{ strokeStyle:'rgb(0, 255, 0)', fillStyle:'rgba(0, 255, 0, 0.4)', lineWidth:3 });
+smoothie.addTimeSeries(line2,
+	 { strokeStyle:'rgb(255, 0, 255)', fillStyle:'rgba(255, 0, 255, 0.3)', lineWidth:3 });
+
+	var content = $('#content');
+// if user is running mozilla then use it's built-in WebSocket
+    window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+    if (!window.WebSocket) {
+        content.html($('<p>', { text: 'Sorry, but your browser doesn\'t '
+                                    + 'support WebSockets.'} ));
+    }
+
+    var connection = new WebSocket('ws://172.17.177.11:1337');
+
+    connection.onopen = function () {
+        connection.send('clinton');
+    };
+
+    connection.onerror = function (error) {
+       content.html($('<p>', { text: 'Sorry, but there\'s some problem with your '
+                                    + 'connection or the server is down.' } ));
+    };
+
+    connection.onmessage = function (message) {
+    	console.log("got " + message);
+        try {
+            var json = JSON.parse(message.data);
+        } catch (e) {
+            console.log('This doesn\'t look like a valid JSON: ', message.data);
+            return;
+        }
+        line1.append(new Date().getTime(),json[0]);
+        // handle incoming message
+    };
+</script>
+</body>
+</html>
