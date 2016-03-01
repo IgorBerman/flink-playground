@@ -14,8 +14,8 @@
 <canvas id="mycanvas" width="1200" height="600"></canvas>
 <div id="content"/>
 <script  type="text/javascript">
-var smoothie = new SmoothieChart({millisPerPixel:100, maxValueScale:1.1, minValue:0});
-smoothie.streamTo(document.getElementById("mycanvas"), 500);
+var smoothie = new SmoothieChart({millisPerPixel:100});
+smoothie.streamTo(document.getElementById("mycanvas"), 1000);
 var line1 = new TimeSeries();
 var line2 = new TimeSeries();
 var line3 = new TimeSeries();
