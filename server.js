@@ -64,18 +64,14 @@ wsServer.on('request', function(request) {
     connection.on('message', function(message) {
         if (message.type === 'utf8') { // accept only text
 
-         var key = message.utf8Data;
-         console.log("Quering: " + key);
+         var key = 'stats';
+         //console.log("Quering: " + key);
          setInterval(function() {
-            client.exists(key, function(err, exists) {
-               //console.log(exists);
-               if(exists == 1) {
-                     client.lrange(key, 0, 0, function(err, reply) {
+                     client.hgetall(key, function(err, reply) {
+                        //console.log("Sending " + JSON.stringify(reply));
                         connection.sendUTF(JSON.stringify(reply));
                      });
-               }
-            })
-         }, 1000);
+         }, 2000);
       }
     });
 

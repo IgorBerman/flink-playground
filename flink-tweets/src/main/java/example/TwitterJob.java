@@ -18,7 +18,6 @@ package example;
  * limitations under the License.
  */
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.StringTokenizer;
 
@@ -30,7 +29,6 @@ import org.apache.flink.shaded.com.google.common.base.Splitter;
 import org.apache.flink.shaded.com.google.common.collect.Sets;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.DataStreamSink;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
@@ -67,7 +65,7 @@ public class TwitterJob {
 				.flatMap(new SelectEnglishAndTokenizeFlatMap()).filter(new WordsFilter(filters))
 				.keyBy(new WordKeySelector());
 
-		WindowedStream<Tuple2<String, Integer>, String, TimeWindow> windowed = keyed.timeWindow(Time.seconds(10));
+		WindowedStream<Tuple2<String, Integer>, String, TimeWindow> windowed = keyed.timeWindow(Time.seconds(1));
 
 		SingleOutputStreamOperator<Tuple2<String, Integer>, ?> summed = windowed.sum(1);
 		
@@ -144,8 +142,6 @@ public class TwitterJob {
 			String key = String.valueOf(t.getField(0));
 			String val = String.valueOf(t.getField(1));
 			jedisConn.hset("stats", key, val);
-			jedisConn.lpush(key, new String[]{val});
-			jedisConn.ltrim(key, 0, 99);
 		}
 
 		@Override
