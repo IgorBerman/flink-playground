@@ -59,7 +59,7 @@ public class TwitterJob {
 			tweets.trackTerm(filter);
 		}
 
-		DataStream<String> streamSource = env.addSource(tweets);
+		DataStream<String> streamSource = env.addSource(tweets).rebalance();
 		// streamSource.print();
 		KeyedStream<Tuple2<String, Integer>, String> keyed = streamSource
 				.flatMap(new SelectEnglishAndTokenizeFlatMap()).filter(new WordsFilter(filters))

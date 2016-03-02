@@ -1,18 +1,22 @@
 
 var http = require("http");
-var WebSocketServer = require('/home/vagrant/node_modules/websocket').server;
 var static = require('/home/vagrant/node_modules/node-static');
+var url = require('url');
+var fileServer = new static.Server('/vagrant/html/');
+
 var redis = require("/home/vagrant/node_modules/redis");
-var client = redis.createClient();
-client.on("error", function (err) {
+var redisClient = redis.createClient();
+
+var WebSocketServer = require('/home/vagrant/node_modules/websocket').server;
+
+
+
+
+redisClient.on("error", function (err) {
     console.log("Error " + err);
 });
-var url = require('url');
-var file = new static.Server('/vagrant/html/');
-
 
 var endsWith = function(str, suffix) {
-   //console.log("checking '" + str + "' vs '" + suffix + "'" + str.indexOf(str, str.length - suffix.length));
    return str.indexOf(suffix, str.length - suffix.length) !== -1;
 };
 
@@ -20,17 +24,15 @@ http.createServer(function (request, response) {
    var reqUrl = request.url;
    if(endsWith(reqUrl, 'html') || endsWith(reqUrl, 'js')) {
       console.log("serving static " + reqUrl);
-      file.serve(request, response);
+      fileServer.serve(request, response);
       return;
    }
    response.writeHead(200, {'Content-Type': 'application/json'});
    var queryURL = url.parse(reqUrl, true);
    var key = queryURL.query['key'];
-   //console.log("Quering: " + key);
-   client.exists(key, function(err, exists) {
-      //console.log(exists);
+   redisClient.exists(key, function(err, exists) {
       if(exists == 1) {
-            client.lrange(key, 0, 99, function(err, reply) {
+            redisClient.lrange(key, 0, 99, function(err, reply) {
                response.end(JSON.stringify(reply));
             });
       } else {
@@ -39,43 +41,35 @@ http.createServer(function (request, response) {
    });
 
 }).listen(8088);
-// Console will print the message
 console.log('Server running at http://127.0.0.1:8088/');
 
 
 var websocketServer = http.createServer(function(request, response) {
-
 });
 
 var wsServer = new WebSocketServer({
     httpServer: websocketServer
 });
+
 wsServer.on('request', function(request) {
     console.log((new Date()) + ' Connection from origin ' + request.origin + '.');
 
-    // accept connection - you should check 'request.origin' to make sure that
-    // client is connecting from your website
-    // (http://en.wikipedia.org/wiki/Same_origin_policy)
     var connection = request.accept(null, request.origin);
 
     console.log((new Date()) + ' Connection accepted.');
 
+    var intervalHandle;
     // user sent some message
     connection.on('message', function(message) {
-        if (message.type === 'utf8') { // accept only text
-
          var key = 'stats';
-         //console.log("Quering: " + key);
-         setInterval(function() {
-                     client.hgetall(key, function(err, reply) {
-                        //console.log("Sending " + JSON.stringify(reply));
-                        connection.sendUTF(JSON.stringify(reply));
-                     });
+         intervalHandle = setInterval(function() {
+            redisClient.hgetall(key, function(err, reply) {
+              connection.sendUTF(JSON.stringify(reply));
+            });
          }, 2000);
       }
     });
 
-    // user disconnected
     connection.on('close', function(connection) {
         
     });
@@ -83,6 +77,4 @@ wsServer.on('request', function(request) {
 });
 
 websocketServer.listen(1337);
-
-// Console will print the message
 console.log('ws running at http://127.0.0.1:1337/');
