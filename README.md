@@ -1,3 +1,4 @@
+![Alt text](/elections.png?raw=true "Optional Title")
 # Description
 * Contains simple vagrant that setups 3 machines(master 172.17.177.11, slave1 172.17.177.21 & slave2 172.17.177.22) with flink clustered setup
 * Contains some examples for processing stream of tweets with flink
