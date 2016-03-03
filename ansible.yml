@@ -115,5 +115,6 @@
       - websocket
 
   handlers:
-    - name: Restart Redis
+    - name: restart redis-server
+      sudo: true
       service: name=redis-server state=restarted

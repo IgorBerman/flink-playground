@@ -67,8 +67,7 @@ wsServer.on('request', function(request) {
               connection.sendUTF(JSON.stringify(reply));
             });
          }, 2000);
-      }
-    });
+      });
 
     connection.on('close', function(connection) {
         
