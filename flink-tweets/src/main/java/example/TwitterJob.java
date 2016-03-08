@@ -67,7 +67,7 @@ public class TwitterJob {
 
 		WindowedStream<Tuple2<String, Integer>, String, TimeWindow> windowed = keyed.timeWindow(Time.seconds(1));
 
-		SingleOutputStreamOperator<Tuple2<String, Integer>, ?> summed = windowed.sum(1);
+		SingleOutputStreamOperator<Tuple2<String, Integer>> summed = windowed.sum(1);
 		
 		summed.addSink(new RedisSink(redisHost));
 		summed.addSink(new PrintSinkFunction<Tuple2<String, Integer>>());

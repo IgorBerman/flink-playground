@@ -3,9 +3,9 @@
   remote_user: vagrant
   sudo: yes
   vars:
-    flink_url: "http://www.eu.apache.org/dist/flink/flink-0.10.2/flink-0.10.2-bin-hadoop27.tgz"
-    flink_archive: "/usr/local/flink-0.10.2-bin-hadoop27.tgz"
-    flink_path: /usr/local/flink-0.10.2
+    flink_url: "http://www-eu.apache.org/dist/flink/flink-1.0.0/flink-1.0.0-bin-hadoop27-scala_2.10.tgz"
+    flink_archive: "/usr/local/flink-1.0.0-bin-hadoop27-scala_2.10.tgz"
+    flink_path: /usr/local/flink-1.0.0
     flink_link: /usr/local/flink
     master_ip: 172.17.177.11
     slave_ips:
@@ -39,10 +39,6 @@
   - name: Link flink
     sudo: true
     file: src={{flink_path}} dest={{flink_link}} state=link
-
-  - name: Download right version of http client
-    sudo: true
-    get_url: url=http://central.maven.org/maven2/org/apache/httpcomponents/httpclient/4.2.6/httpclient-4.2.6.jar dest="{{flink_link}}/lib/ahttpclient-4.2.6.jar"
 
   - name: Chown flink
     sudo: true
